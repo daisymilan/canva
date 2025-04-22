@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Canva App</title>
+  <script src="https://sdk.canva.com/designbutton/v2/api.js"></script>
+</head>
+<body>
+  <h1>Hello from My Canva App</h1>
+  <button id="publishBtn">Publish to Canva</button>
+
+  <script>
+    // Replace this with your app's real client ID from Canva Developer Portal
+    const CLIENT_ID = 'OC-AZZbF5yvHt_B';
+
+    Canva.init({
+      apiKey: CLIENT_ID,
+    });
+
+    Canva.onReady(() => {
+      console.log("Canva app is ready!");
+
+      document.getElementById('publishBtn').onclick = () => {
+        Canva.publish({
+          type: 'IMAGE',
+          url: 'https://via.placeholder.com/1200x800.png?text=Demo+Image',
+          thumbnail: 'https://via.placeholder.com/300x200.png?text=Thumbnail',
+          title: 'Demo Image from My Canva App',
+        });
+      };
+    });
+  </script>
+</body>
+</html>
