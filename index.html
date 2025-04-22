@@ -2,34 +2,51 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Canva App</title>
-  <script src="https://sdk.canva.com/designbutton/v2/api.js"></script>
+  <title>Canva OAuth Starter</title>
 </head>
 <body>
-  <h1>Hello from My Canva App</h1>
-  <button id="publishBtn">Publish to Canva</button>
+  <h1>Connect to Canva</h1>
+  <button onclick="startOAuth()">Connect with Canva</button>
 
   <script>
-    // Replace this with your app's real client ID from Canva Developer Portal
-    const CLIENT_ID = 'OC-AZZbF5yvHt_B';
+    const clientId = "OC-AZZbF5yvHt_B"; // ✅ Replace this
+    const redirectUri = "https://n8n.servenorobot.com/rest/oauth2-credential/callback";
+    const scopes = "openid offline publish_content";
 
-    Canva.init({
-      apiKey: CLIENT_ID,
-    });
+    // Utility functions
+    const base64url = (str) =>
+      btoa(String.fromCharCode(...new Uint8Array(str)))
+        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 
-    Canva.onReady(() => {
-      console.log("Canva app is ready!");
+    const sha256 = async (plain) => {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(plain);
+      return await crypto.subtle.digest("SHA-256", data);
+    };
 
-      document.getElementById('publishBtn').onclick = () => {
-        Canva.publish({
-          type: 'IMAGE',
-          url: 'https://via.placeholder.com/1200x800.png?text=Demo+Image',
-          thumbnail: 'https://via.placeholder.com/300x200.png?text=Thumbnail',
-          title: 'Demo Image from My Canva App',
-        });
-      };
-    });
+    async function startOAuth() {
+      // 1. Generate PKCE code verifier
+      const codeVerifier = Array.from(crypto.getRandomValues(new Uint8Array(64)))
+        .map(x => ('0' + x.toString(16)).slice(-2)).join('');
+
+      localStorage.setItem("canva_code_verifier", codeVerifier);
+
+      // 2. Generate code challenge
+      const hashed = await sha256(codeVerifier);
+      const codeChallenge = base64url(hashed);
+
+      // 3. Build OAuth URL
+      const authUrl = `https://www.canva.com/api/oauth/authorize?` +
+        `client_id=${clientId}` +
+        `&response_type=code` +
+        `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+        `&scope=${encodeURIComponent(scopes)}` +
+        `&code_challenge=${codeChallenge}` +
+        `&code_challenge_method=S256`;
+
+      // 4. Redirect to Canva
+      window.location.href = authUrl;
+    }
   </script>
 </body>
 </html>
